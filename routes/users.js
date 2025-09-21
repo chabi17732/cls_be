@@ -27,7 +27,8 @@ router.get("/:userid", async (req, res) => {
   }
 });
 
-// routes/users.js
+
+// Assign or update device for a user
 router.post("/assign", async (req, res) => {
   const { userid, macaddress } = req.body;
 
@@ -59,5 +60,6 @@ router.post("/assign", async (req, res) => {
     console.error("Error assigning device:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
+});
 
 module.exports = router;
