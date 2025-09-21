@@ -36,19 +36,21 @@ router.post("/assign", async (req, res) => {
   }
 
   try {
-    // Check if MAC already exists
-    const existing = await db.query(
-      "SELECT * FROM users WHERE macaddress = $1",
-      [macaddress]
+    // Ensure MAC address is not already assigned to another user
+    const existingMac = await db.query(
+      "SELECT * FROM users WHERE macaddress = $1 AND userid != $2",
+      [macaddress, userid]
     );
 
-    if (existing.rows.length > 0) {
-      return res.status(400).json({ error: "MAC address already assigned" });
+    if (existingMac.rows.length > 0) {
+      return res.status(400).json({ error: "MAC address already assigned to another user" });
     }
 
-    // Insert new user-device link
+    // Insert new row or update existing user's device
     await db.query(
-      "INSERT INTO users (userid, macaddress) VALUES ($1, $2)",
+      `INSERT INTO users (userid, macaddress)
+       VALUES ($1, $2)
+       ON CONFLICT (userid) DO UPDATE SET macaddress = EXCLUDED.macaddress`,
       [userid, macaddress]
     );
 
@@ -57,6 +59,5 @@ router.post("/assign", async (req, res) => {
     console.error("Error assigning device:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
-});
 
 module.exports = router;
